@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data and model artifacts stay in Drive/Colab, never in git
+data/
+outputs/
+*.pth
+*.pt
+*.pkl
+*.flac
+*.mp4
+
+# Secrets
+.env
+*.token
+
+# OS / editor
+.DS_Store
+.vscode/
+venv/
+.venv/

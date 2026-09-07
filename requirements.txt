@@ -1,0 +1,12 @@
+# Phase 1 (audio) dependencies. Colab has torch/torchaudio preinstalled;
+# this file is here for reproducibility and for running locally if ever needed.
+# Phase 2 (video, DeepfakeBench) intentionally does NOT share this file —
+# DeepfakeBench pins Python 3.7.2 and its own dependency versions, so it needs
+# its own isolated environment. See README.md.
+
+torch
+torchaudio
+huggingface_hub
+scikit-learn
+numpy
+tqdm
