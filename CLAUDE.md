@@ -27,6 +27,74 @@ recovered from it as genuinely new; everything else in that old file
 candidates) is superseded by what's below and was not carried forward.
 That folder is being left in place, untouched, not merged into the new repo.
 
+## Repository
+Phase 1 is version-controlled at `github.com/Ayat1807/ElderTrustShield`
+(private). Contains: `src/audio/` (the confirmed Phase 1 pipeline as
+importable modules, including the baked-in label-inversion fix),
+`notebooks/phase1_audio_colab.ipynb` (thin Colab driver importing from
+`src/`), `notebooks/phase1_audio_working.ipynb` (the actual full run
+history — extraction, the 80.77%→19.23% EER fix, calibration — kept
+alongside the clean version as the real evidence trail, not superseded by
+it). Local clone lives at `C:\Users\Acer\Desktop\ElderTrustShield`, worked
+on via VS Code + Claude Code; GPU execution still happens via Colab
+(cloning/pulling this repo with a fine-grained read-only PAT stored in
+Colab Secrets, since the repo is private).
+
+## Phase 2 (video) — UCF confirmed working end to end
+Confirmed via a smoke test (random noise input, not yet real images): UCF
+loads with its real trained checkpoint and produces a valid forward pass.
+`predictions['cls']` returns raw logits (can be negative — confirmed by
+seeing an actual negative value in output, not assumed); apply
+`torch.softmax(cls, dim=1)` to get real probabilities. Per `ucf.yaml`'s own
+`label_dict` (`FF-real: 0`, all fake categories nonzero): **index 0 =
+probability real/bonafide, index 1 = probability fake** — natural
+convention, unlike AASIST3's reversed one, but not yet independently
+verified on real labeled images the way AASIST3's convention was checked;
+do that before trusting it fully.
+
+Getting here required ten rounds of real fixes, in order — worth keeping
+so this doesn't need rediscovering. Importing `from detectors import
+DETECTOR` eagerly imports code for all ~36 detectors (via
+`training/detectors/__init__.py`), not just UCF, so most of these are
+unrelated to UCF itself but block the import regardless:
+1. Missing `fvcore`, `iopath` (video detectors' SlowFast utilities)
+2. Circular import inside `detectors/utils/slowfast/utils/env.py` — fixed
+   by commenting out the 11 video/CLIP-detector import lines in
+   `detectors/__init__.py` (`slowfast`, `videomae`, `clip`, `timesformer`,
+   `xclip`, `ftcn`, `i3d`, `altfreezing`, `stil`, `tall`, `effort`) — none
+   needed for UCF (a Spatial detector, per the repo's own category list)
+3. Missing `efficientnet_pytorch` (networks/__init__.py backbone import)
+4. Missing `kornia` (multi_attention_detector.py)
+5. Missing `imgaug` (bi_online_generation.py)
+6. `imgaug` itself breaks on NumPy 2.0 — its code calls the removed
+   `np.sctypes` attribute. Fixed with a monkeypatch restoring
+   `np.sctypes` as a plain dict of type lists, run before any DeepfakeBench
+   import. Real value, not a hack: `np.sctypes` was a static reference
+   table, never used in computation, so restoring it can't change any
+   numeric result anywhere.
+7. Missing `lmdb`
+8. Missing data file: `preprocessing/dlib_tools/shape_predictor_81_face_landmarks.dat`
+   (dlib face-landmark model, loaded eagerly at import time by
+   fwa_blend.py). Downloaded from
+   `github.com/SCLBD/DeepfakeBench/releases/download/v1.0.0/shape_predictor_81_face_landmarks.dat`
+   — this is also the exact file needed for the deferred self-preprocessing
+   c40 plan, so this download has dual value, not just an import-fix.
+9. Missing `training/pretrained/xception-b5690688.pth` (ImageNet Xception
+   backbone — UCFDetector.__init__ loads this unconditionally as a
+   starting point even though the real trained checkpoint overwrites it
+   moments later). Downloaded from
+   `github.com/SCLBD/DeepfakeBench/releases/download/v1.0.0/pretrained.zip`.
+10. That zip's contents were nested one level deeper than expected
+    (`pretrained/pretrained/*.pth` instead of `pretrained/*.pth`) — fixed
+    by moving the files up one directory level after extraction.
+
+None of Colab's own preinstalled versions (numpy, torch, opencv,
+scikit-learn) were downgraded to match install.sh's old pins — deliberate:
+Colab's modern torch (2.11.0+cu128, CUDA confirmed working) was kept as-is
+rather than replaced with install.sh's CUDA-11.3-linked 1.12.0 build, since
+GPU compute runs on Colab, not the local machine, and downgrading a
+working modern stack for an old pin risked breaking more than it fixed.
+
 ## Working norms
 - Distinguish clearly between something confirmed from actual
   evidence/documentation versus something inferred or assumed — never
@@ -111,6 +179,33 @@ Candidates evaluated so far, with direct evidence rather than assumption:
   across 14 benchmarks spanning 2019–2025. Relevant to the project's
   best-possible-performance goal, but no public/loadable checkpoint has
   been confirmed yet — needs checking before relying on it.
+
+## Phase 2 (video) — decisions made
+- **Detector chosen: UCF**, over SPSL — UCF has the best within-domain
+  average (0.9527 vs SPSL's 0.9408) and ties for most cross-dataset top-3
+  finishes (5 vs 3) in DeepfakeBench's own published table; SPSL's raw
+  cross-domain average is marginally higher (0.7875 vs 0.7801) but driven
+  by exceptional performance on just two datasets (Celeb-DF-v1/v2) rather
+  than broad consistency. Confirmed checkpoint available and downloadable:
+  `ucf_best.pth` (188.0 MB), from
+  `github.com/SCLBD/DeepfakeBench/releases/tag/v1.0.1`. `spsl_best.pth`
+  (87.8 MB) also confirmed available from the same release if reconsidered.
+- **Preprocessing: using DeepfakeBench's own preprocessed data at c23**
+  compression for the prototype, not the c40 plan recovered from the old
+  pre-Colab CLAUDE.md (chosen there specifically to match real-world call
+  quality). Deliberate trade-off, not an oversight: DeepfakeBench provides
+  ready-to-use preprocessed data (cropped faces, landmarks, masks) plus
+  matching JSON configs at c23 only — using it skips building a face-
+  detection/cropping pipeline entirely, matching the "presentable prototype
+  now" priority. **Revisit later:** self-preprocessing raw FF++ at c40 (own
+  dlib pipeline) remains the documented path to better real-world-call-
+  quality matching, deferred alongside the other fine-tuning/improvement
+  work already queued after the prototype ships.
+- Detector's own trained-checkpoint weights (`./training/weights/`, from
+  the v1.0.1 release) are a separate thing from the empty
+  `./training/pretrained/` folder (ImageNet backbones, for training
+  from scratch only) — do not confuse the two when following the repo's
+  own docs; this distinction wasn't obvious from the folder names alone.
 
 ## Tech stack
 - Python throughout.
