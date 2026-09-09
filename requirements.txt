@@ -10,3 +10,7 @@ huggingface_hub
 scikit-learn
 numpy
 tqdm
+# pip install dlib is often difficult on Windows without a C++ compiler;
+# conda-forge is the Windows-friendly install path.
+dlib
+scikit-image
