@@ -14,3 +14,4 @@ tqdm
 # conda-forge is the Windows-friendly install path.
 dlib
 scikit-image
+gradio
