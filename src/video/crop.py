@@ -43,7 +43,7 @@ def _align_crop(img_rgb, landmark, outsize=256, scale=1.3):
     return cv2.warpAffine(img_rgb, M, (outsize, outsize))
 
 
-def crop_face(image_bgr):
+def crop_face(image_bgr, min_face_size=80):
     """Raw image (BGR, as cv2.imread loads it) -> 256x256 aligned RGB face crop,
     or None if no face detected. Returns RGB deliberately - matches the
     already-validated normalization path, not DeepfakeBench's own BGR output.
@@ -55,5 +55,7 @@ def crop_face(image_bgr):
     if len(faces) == 0:
         return None
     face = max(faces, key=lambda r: r.width() * r.height())
+    if face.width() < min_face_size or face.height() < min_face_size:
+        return None  # face detected but too small/distant to crop reliably
     landmarks = _get_keypts(rgb, face, _predictor)
     return _align_crop(rgb, landmarks, outsize=256, scale=1.3)

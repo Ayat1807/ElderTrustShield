@@ -59,12 +59,13 @@ def score_video_file(video_path: str,
                       deepfakebench_dir: str = "/content/repo/external/DeepfakeBench",
                       dlib_predictor_path: str = "/content/repo/external/DeepfakeBench/preprocessing/dlib_tools/shape_predictor_81_face_landmarks.dat",
                       sample_every_seconds: float = 1.0,
-                      aggregate: str = "max") -> float:
+                      aggregate: str = "top2_mean") -> float:
     """Returns probability (0-1) of AI-generated/manipulated face, aggregated
-    across sampled frames. aggregate='max' (default) means one strongly-
-    flagged frame drives the result - matches the project's protective-
-    security framing already used in fusion. Frames with no detected face
-    are skipped, not scored as zero."""
+    across sampled frames. aggregate: "top2_mean" (default) - averages the
+    two highest-scoring usable frames, weighted toward catching a real signal
+    without letting one anomalous frame single-handedly decide the result the
+    way "max" did. Also accepts "max" or "mean". Frames with no detected
+    face are skipped, not scored as zero."""
     _ensure_loaded(deepfakebench_dir, dlib_predictor_path)
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
@@ -83,4 +84,12 @@ def score_video_file(video_path: str,
     cap.release()
     if not scores:
         raise ValueError("No face detected in any sampled frame of this video.")
-    return float(max(scores)) if aggregate == "max" else float(np.mean(scores))
+    if aggregate == "max":
+        return float(max(scores))
+    elif aggregate == "mean":
+        return float(np.mean(scores))
+    elif aggregate == "top2_mean":
+        top_scores = sorted(scores, reverse=True)[:2]
+        return float(np.mean(top_scores))
+    else:
+        raise ValueError(f"Unknown aggregate method: {aggregate}")
