@@ -52,8 +52,8 @@ def render_result_html(modality, tier, risk):
 
 
 def get_audio_duration(path):
-    info = torchaudio.info(path)
-    return info.num_frames / info.sample_rate
+    waveform, sample_rate = torchaudio.load(path)
+    return waveform.shape[-1] / sample_rate
 
 
 def get_video_duration(path):
