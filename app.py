@@ -103,8 +103,21 @@ def check_combined(voice_risk, video_risk):
 
 CUSTOM_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap');
+:root {
+    --body-background-fill: #111823;
+    --background-fill-primary: #161F2C;
+    --block-background-fill: #161F2C;
+    --block-border-color: #25303F;
+    --block-label-background-fill: #1A2432;
+    --block-label-text-color: #9AA5AE;
+    --body-text-color: #E9ECEF;
+    --body-text-color-subdued: #9AA5AE;
+    --button-primary-background-fill: #C9A24A;
+    --button-primary-background-fill-hover: #B08C3B;
+    --button-primary-text-color: #111823;
+}
 .gradio-container { background: #111823 !important; color: #E9ECEF !important; font-family: 'Work Sans', sans-serif !important; }
-.gradio-container h1, .gradio-container h2, .gradio-container h3 { font-family: 'Fraunces', serif !important; }
+.gradio-container h1, .gradio-container h2, .gradio-container h3 { font-family: 'Fraunces', serif !important; color: #E9ECEF !important; }
 .gradio-container label, .gradio-container .block { color: #E9ECEF !important; }
 .gradio-container .block { background: #161F2C !important; border-color: #25303F !important; }
 button.primary { background: #C9A24A !important; border-color: #C9A24A !important; color: #111823 !important; }
