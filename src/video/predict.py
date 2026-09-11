@@ -9,6 +9,18 @@ import yaml
 
 from .crop import crop_face, load_predictor
 
+np.sctypes = {
+    'int': [np.int8, np.int16, np.int32, np.int64],
+    'uint': [np.uint8, np.uint16, np.uint32, np.uint64],
+    'float': [np.float16, np.float32, np.float64, np.longdouble],
+    'complex': [np.complex64, np.complex128, np.clongdouble],
+    'others': [bool, object, bytes, str, np.void],
+}
+# NumPy 2.0 removed this attribute; DeepfakeBench's bundled imgaug
+# dependency still references it at import time. This must live in the
+# actual file (not just a notebook cell) so it applies in any process
+# that imports this module, including app.py running standalone.
+
 _model = None
 _device = None
 
