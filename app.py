@@ -29,8 +29,8 @@ TIER_COPY = {
         "High": "Taking both signals together, this call shows meaningful signs of being AI-generated. It's worth confirming who you're speaking with another way.",
     },
 }
-TIER_COLORS = {"Low": "#4C7A4A", "Medium": "#B07A2E", "High": "#A14732"}
-TIER_BG = {"Low": "#EAF3E8", "Medium": "#FBF1E1", "High": "#FBEAE6"}
+TIER_COLORS = {"Low": "#6FC79A", "Medium": "#D8B15C", "High": "#E48576"}
+TIER_BG = {"Low": "#16261F", "Medium": "#2A2718", "High": "#2B1B1A"}
 
 
 def render_result_html(modality, tier, risk):
@@ -38,7 +38,7 @@ def render_result_html(modality, tier, risk):
     copy = TIER_COPY[modality][tier]
     pct = round(risk * 100)
     return f"""
-    <div style="font-family: 'Public Sans', sans-serif;">
+    <div style="font-family: 'Work Sans', sans-serif;">
       <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 13px;
                     border-radius:999px; font-size:13px; font-weight:600;
                     background:{bg}; color:{color};">
@@ -46,7 +46,7 @@ def render_result_html(modality, tier, risk):
         {tier} risk
       </span>
       <p style="font-size:14px; margin:10px 0 4px;">{copy}</p>
-      <div style="font-size:12px; color:#5B6B70;">{pct}% risk score</div>
+    <div style="font-size:12px; color:#9AA5AE;">{pct}% risk score</div>
     </div>
     """
 
@@ -102,16 +102,20 @@ def check_combined(voice_risk, video_risk):
 
 
 CUSTOM_CSS = """
-.gradio-container { background: #F4F6F5 !important; }
-button.primary { background: #2B6E68 !important; border-color: #2B6E68 !important; }
-button.primary:hover { background: #24605B !important; }
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap');
+.gradio-container { background: #111823 !important; color: #E9ECEF !important; font-family: 'Work Sans', sans-serif !important; }
+.gradio-container h1, .gradio-container h2, .gradio-container h3 { font-family: 'Fraunces', serif !important; }
+.gradio-container label, .gradio-container .block { color: #E9ECEF !important; }
+.gradio-container .block { background: #161F2C !important; border-color: #25303F !important; }
+button.primary { background: #C9A24A !important; border-color: #C9A24A !important; color: #111823 !important; }
+button.primary:hover { background: #B08C3B !important; }
 """
 
 with gr.Blocks(css=CUSTOM_CSS, title="Signal Check") as demo:
     gr.HTML("""
       <div style="text-align:center; margin-bottom:8px;">
-        <h1 style="font-weight:600;">A calm second opinion on suspicious calls</h1>
-        <p style="color:#5B6B70;">Upload a voice clip or a video recording to check for signs it may be AI-generated.</p>
+        <h1 style="font-weight:600; color:#E9ECEF;">A calm second opinion on suspicious calls</h1>
+        <p style="color:#9AA5AE;">Upload a voice clip or a video recording to check for signs it may be AI-generated.</p>
       </div>
     """)
 
@@ -138,8 +142,8 @@ with gr.Blocks(css=CUSTOM_CSS, title="Signal Check") as demo:
     combined_btn.click(check_combined, inputs=[voice_risk_state, video_risk_state], outputs=[combined_result])
 
     gr.HTML("""
-      <div style="text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid #E1E6E4;">
-        <p style="font-size:12.5px; color:#5B6B70;">This is a risk signal meant to support your own judgment — not a verdict, and not a guarantee.
+            <div style="text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid #25303F;">
+                <p style="font-size:12.5px; color:#9AA5AE;">This is a risk signal meant to support your own judgment — not a verdict, and not a guarantee.
         Uploaded files are not stored or retained. If something feels off, it's always reasonable to verify who you're speaking with another way.</p>
       </div>
     """)
